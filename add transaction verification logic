@@ -1,0 +1,37 @@
+import hashlib
+import time
+import ecdsa
+
+class Transaction:
+    def __init__(self, sender, receiver, amount, private_key):
+        self.sender = sender
+        self.receiver = receiver
+        self.amount = amount
+        self.timestamp = time.time()
+        self.tx_id = self.generate_tx_id()
+        self.signature = self.sign_transaction(private_key)
+
+    def generate_tx_id(self):
+        data = f"{self.sender}{self.receiver}{self.amount}{self.timestamp}"
+        return hashlib.sha256(data.encode()).hexdigest()
+
+    def sign_transaction(self, private_key):
+        sk = ecdsa.SigningKey.from_string(bytes.fromhex(private_key), curve=ecdsa.SECP256k1)
+        return sk.sign(self.tx_id.encode()).hex()
+
+    def verify_transaction(self, public_key):
+        vk = ecdsa.VerifyingKey.from_string(bytes.fromhex(public_key), curve=ecdsa.SECP256k1)
+        try:
+            return vk.verify(bytes.fromhex(self.signature), self.tx_id.encode())
+        except ecdsa.BadSignatureError:
+            return False
+
+if __name__ == "__main__":
+    private_key = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1).to_string().hex()
+    public_key = ecdsa.VerifyingKey.from_string(bytes.fromhex(private_key), curve=ecdsa.SECP256k1).to_string().hex()
+    
+    tx = Transaction("Alice", "Bob", 0.5, private_key)
+    
+    print(f"Transaction ID: {tx.tx_id}")
+    print(f"Signature: {tx.signature}")
+    print(f"Verified: {tx.verify_transaction(public_key)}")
