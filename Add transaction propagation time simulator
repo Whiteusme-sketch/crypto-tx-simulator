@@ -1,0 +1,24 @@
+import random
+import time
+import hashlib
+
+def simulate_tx_propagation():
+    nodes = [f"Node-{i}" for i in range(1, 6)]
+    tx_id = hashlib.sha256(str(time.time()).encode()).hexdigest()
+    propagation_times = {}
+    
+    base_time = time.time()
+    for node in nodes:
+        delay = round(random.uniform(0.01, 1.0), 3)
+        propagation_times[node] = round(base_time + delay, 3)
+    
+    return {
+        "transaction_id": tx_id,
+        "propagation_times": propagation_times
+    }
+
+if __name__ == "__main__":
+    tx_data = simulate_tx_propagation()
+    print(f"Transaction ID: {tx_data['transaction_id']}")
+    for node, timestamp in tx_data["propagation_times"].items():
+        print(f"{node} received transaction at {timestamp} seconds")
