@@ -1,0 +1,36 @@
+import random
+import hashlib
+import time
+
+def generate_random_tx():
+    wallets = [f"0x{hashlib.sha256(str(i).encode()).hexdigest()[:40]}" for i in range(10)]
+    sender = random.choice(wallets)
+    receiver = random.choice([w for w in wallets if w != sender])
+    amount = round(random.uniform(0.001, 10), 6)
+    timestamp = int(time.time())
+    tx_data = f"{sender}{receiver}{amount}{timestamp}"
+    tx_hash = hashlib.sha256(tx_data.encode()).hexdigest()
+    
+    return {
+        "sender": sender,
+        "receiver": receiver,
+        "amount": amount,
+        "timestamp": timestamp,
+        "tx_hash": tx_hash
+    }
+
+def validate_transaction(tx):
+    if not tx["sender"] or not tx["receiver"] or tx["sender"] == tx["receiver"]:
+        return False
+    if tx["amount"] <= 0:
+        return False
+    if not isinstance(tx["tx_hash"], str) or len(tx["tx_hash"]) != 64:
+        return False
+    return True
+
+if __name__ == "__main__":
+    for _ in range(5):
+        tx = generate_random_tx()
+        is_valid = validate_transaction(tx)
+        print(f"Transaction: {tx}")
+        print(f"Valid: {is_valid}\n")
