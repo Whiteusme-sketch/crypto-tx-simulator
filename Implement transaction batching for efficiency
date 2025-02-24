@@ -1,0 +1,34 @@
+import random
+import hashlib
+import time
+import hmac
+
+SECRET_KEY = b"supersecurekey"
+BATCH_SIZE = 5
+
+def generate_random_tx():
+    wallets = [f"0x{hashlib.sha256(str(i).encode()).hexdigest()[:40]}" for i in range(10)]
+    sender = random.choice(wallets)
+    receiver = random.choice([w for w in wallets if w != sender])
+    amount = round(random.uniform(0.001, 10), 6)
+    timestamp = int(time.time())
+    tx_data = f"{sender}{receiver}{amount}{timestamp}"
+    tx_hash = hashlib.sha256(tx_data.encode()).hexdigest()
+    signature = hmac.new(SECRET_KEY, tx_hash.encode(), hashlib.sha256).hexdigest()
+    
+    return {
+        "sender": sender,
+        "receiver": receiver,
+        "amount": amount,
+        "timestamp": timestamp,
+        "tx_hash": tx_hash,
+        "signature": signature
+    }
+
+def batch_transactions(batch_size):
+    return [generate_random_tx() for _ in range(batch_size)]
+
+if __name__ == "__main__":
+    transaction_batches = batch_transactions(BATCH_SIZE)
+    for idx, batch in enumerate(transaction_batches, 1):
+        print(f"Transaction {idx}: {batch}")
