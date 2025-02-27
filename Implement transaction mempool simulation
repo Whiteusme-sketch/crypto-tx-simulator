@@ -1,0 +1,52 @@
+import random
+import hashlib
+import time
+import hmac
+from collections import deque
+
+SECRET_KEY = b"supersecurekey"
+BATCH_SIZE = 5
+MEMPOOL_SIZE = 10
+
+class Mempool:
+    def __init__(self, size):
+        self.size = size
+        self.transactions = deque()
+    
+    def add_transaction(self, tx):
+        if len(self.transactions) >= self.size:
+            self.transactions.popleft()
+        self.transactions.append(tx)
+    
+    def get_transactions(self):
+        return list(self.transactions)
+
+def generate_random_tx():
+    wallets = [f"0x{hashlib.sha256(str(i).encode()).hexdigest()[:40]}" for i in range(10)]
+    sender = random.choice(wallets)
+    receiver = random.choice([w for w in wallets if w != sender])
+    amount = round(random.uniform(0.001, 10), 6)
+    timestamp = int(time.time())
+    tx_data = f"{sender}{receiver}{amount}{timestamp}"
+    tx_hash = hashlib.sha256(tx_data.encode()).hexdigest()
+    signature = hmac.new(SECRET_KEY, tx_hash.encode(), hashlib.sha256).hexdigest()
+    
+    return {
+        "sender": sender,
+        "receiver": receiver,
+        "amount": amount,
+        "timestamp": timestamp,
+        "tx_hash": tx_hash,
+        "signature": signature
+    }
+
+if __name__ == "__main__":
+    mempool = Mempool(MEMPOOL_SIZE)
+    
+    for _ in range(15):  # Generate more transactions than mempool size to test overflow
+        tx = generate_random_tx()
+        mempool.add_transaction(tx)
+    
+    print("Mempool Transactions:")
+    for tx in mempool.get_transactions():
+        print(tx)
